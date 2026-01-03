@@ -46,38 +46,53 @@ public class MatrixOperations {
             throw new IllegalArgumentException("Matrix must contain at least one row.");
 
         ans = m.copy();
-
-        int rows = m.getNumRows();
         int cols = m.getNumCols();
 
-        for(int j = 0; j < cols; j++)
-        {
-            double sum = 0;
-            for(int i = 0; i < rows; i++) {
-                sum = sum + ans.get(i + 1, j + 1);
-            }
-            double mean = sum / rows;
-
-            double deviationSum = 0;
-            for(int i = 0; i < rows; i++) {
-                double temp = mean - ans.get(i + 1, j + 1);
-                deviationSum = deviationSum + temp * temp;
-            }
-            double deviation = Math.sqrt(deviationSum / rows);
-
-            if (deviation == 0) {
-                for(int i = 0; i < rows; i++) {
-                    ans.set(i + 1, j + 1, 0);
-                }
-            } else {
-                for(int i = 0; i < rows; i++) {
-                    double cur = ans.get(i + 1, j + 1);
-                    ans.set(i, j, (cur - mean) / deviation);
-                }
-            }
+        for (int j = 0; j < cols; j++) {
+            double mean = calculateMean(ans, j);
+            double std  = calculateStd(ans, j, mean);
+            normalizeColumn(ans, j, mean, std);
         }
         // ---------------write your code ABOVE this line only! ------------------
         return ans;
+    }
+
+    private static double calculateMean(Matrix m, int col) {
+        int rows = m.getNumRows();
+        double sum = 0;
+
+        for (int i = 0; i < rows; i++) {
+            sum += m.get(i + 1, col + 1);
+        }
+
+        return sum / rows;
+    }
+
+    private static double calculateStd(Matrix m, int col, double mean) {
+        int rows = m.getNumRows();
+        double deviationSum = 0;
+
+        for (int i = 0; i < rows; i++) {
+            double diff = mean - m.get(i + 1, col + 1);
+            deviationSum += diff * diff;
+        }
+
+        return Math.sqrt(deviationSum / rows);
+    }
+
+    private static void normalizeColumn(Matrix matrix, int col, double mean, double std) {
+        int rows = matrix.getNumRows();
+
+        if (std == 0) {
+            for (int i = 0; i < rows; i++) {
+                matrix.set(i + 1, col + 1, 0);
+            }
+        } else {
+            for (int i = 0; i < rows; i++) {
+                double cur = matrix.get(i + 1, col + 1);
+                matrix.set(i + 1, col + 1, (cur - mean) / std);
+            }
+        }
     }
 
     // Task 1.3
@@ -250,29 +265,75 @@ public class MatrixOperations {
         boolean[] ans = null;
         // ---------------write your code BELOW this line only! ------------------
 
+
         if (trainingFeatures == null || trainingClasses == null || testFeatures == null) {
             throw new IllegalArgumentException("Null Arguments");
         }
+        int trainingRows = trainingFeatures.getNumRows();
+        int testRows = testFeatures.getNumRows();
         if (trainingFeatures.getNumCols() != testFeatures.getNumCols()) {
             throw new IllegalArgumentException("Both Matrices should have the same amount of Columns");
         }
         if (trainingFeatures.getNumRows() != trainingClasses.length){
-            throw new IllegalArgumentException("trainingFeatures rows should be the same as training classes length");
+            throw new IllegalArgumentException("trainingFeatures rows != trainingClasses.length");
         }
         if (k < 1 || k > trainingFeatures.getNumRows()) {
-            throw new IllegalArgumentException("Invalid value for k");
+            throw new IllegalArgumentException("k value cannot be " + k);
         }
 
         Matrix normalizedTrainingFeatures = normalize(trainingFeatures);
-        Matrix normalizedTestFeatures = normalize(testFeatures);
+        Matrix normalizedTestFeatures = normalizeUsingTraining(trainingFeatures, testFeatures);
 
-        Matrix newMat = concatMatrices(normalizedTrainingFeatures, normalizedTestFeatures);
+        Matrix concatinatedMatrix = concatMatrices(normalizedTrainingFeatures, normalizedTestFeatures);
 
-        Matrix distMatrix = squareDistance(newMat);
+        Matrix distMatrix = squareDistance(concatinatedMatrix);
 
+        ans = new boolean[testRows];
 
+        for (int i = 0; i < testFeatures.getNumRows(); i++) {
+            int testIndex = trainingRows + i;
+
+            int[] indices = new int[trainingRows];
+            for (int x = 0; x < trainingRows; x++)
+                indices[x] = x;
+
+            Comparator<Integer> comp = new IndexComparator(distMatrix, testIndex);
+
+            int[] sorted = selectionSort(indices, comp);
+
+            int countTrue = 0;
+            for (int x = 0; x < k; x++) {
+                if (trainingClasses[sorted[x]])
+                    countTrue++;
+            }
+
+            ans[i] = (countTrue > k / 2);
+        }
 
         // ---------------write your code ABOVE this line only! ------------------
+        return ans;
+    }
+
+    private static Matrix normalizeUsingTraining(Matrix train, Matrix destMat)
+    {
+        if (train == null || destMat == null)
+            throw new IllegalArgumentException();
+
+        if (train.getNumCols() != destMat.getNumCols())
+            throw new IllegalArgumentException();
+
+        if (train.getNumRows() == 0)
+            throw new IllegalArgumentException();
+
+        Matrix ans = destMat.copy();
+        int cols = train.getNumCols();
+
+        for (int j = 0; j < cols; j++) {
+            double mean = calculateMean(train, j);
+            double std  = calculateStd(train, j, mean);
+            normalizeColumn(ans, j, mean, std);
+        }
+
         return ans;
     }
 
@@ -307,7 +368,15 @@ public class MatrixOperations {
     public static double measureAccuracy(boolean[] testLabels, boolean[] trueLabels) {
         double ans = 0;
         // ---------------write your code BELOW this line only! ------------------
+        double trueCounter = 0;
+        double total = testLabels.length;
 
+        for (int i = 0; i < testLabels.length; i++) {
+            if(testLabels[i] == trueLabels[i])
+                trueCounter = trueCounter + 1;
+        }
+
+        ans = trueCounter / total;
         // ---------------write your code ABOVE this line only! ------------------
         return ans;
     }
