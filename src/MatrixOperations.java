@@ -218,7 +218,26 @@ public class MatrixOperations {
     public static int[] selectionSort(int[] array, Comparator<Integer> comp) {
         int[] ans = null;
         // ---------------write your code BELOW this line only! ------------------
+        if (array == null || comp == null) {
+            throw new IllegalArgumentException();
+        }
+        ans = array.clone();
 
+        for (int i = 0; i < ans.length - 1; i++) {
+            int minIdx = i;
+
+            for (int j = i + 1; j < ans.length; j++) {
+                if (comp.compare(ans[j], ans[minIdx]) < 0) {
+                    minIdx = j;
+                }
+            }
+
+            if (minIdx != i) {
+                int temp = ans[minIdx];
+                ans[minIdx] = ans[i];
+                ans[i] = temp;
+            }
+        }
         // ---------------write your code ABOVE this line only! ------------------
         return ans;
     }
@@ -231,8 +250,55 @@ public class MatrixOperations {
         boolean[] ans = null;
         // ---------------write your code BELOW this line only! ------------------
 
+        if (trainingFeatures == null || trainingClasses == null || testFeatures == null) {
+            throw new IllegalArgumentException("Null Arguments");
+        }
+        if (trainingFeatures.getNumCols() != testFeatures.getNumCols()) {
+            throw new IllegalArgumentException("Both Matrices should have the same amount of Columns");
+        }
+        if (trainingFeatures.getNumRows() != trainingClasses.length){
+            throw new IllegalArgumentException("trainingFeatures rows should be the same as training classes length");
+        }
+        if (k < 1 || k > trainingFeatures.getNumRows()) {
+            throw new IllegalArgumentException("Invalid value for k");
+        }
+
+        Matrix normalizedTrainingFeatures = normalize(trainingFeatures);
+        Matrix normalizedTestFeatures = normalize(testFeatures);
+
+        Matrix newMat = concatMatrices(normalizedTrainingFeatures, normalizedTestFeatures);
+
+        Matrix distMatrix = squareDistance(newMat);
+
+
+
         // ---------------write your code ABOVE this line only! ------------------
         return ans;
+    }
+
+    private static Matrix concatMatrices(Matrix mat1, Matrix mat2)
+    {
+        int totalRows = mat1.getNumRows() + mat2.getNumRows();
+        int cols = mat1.getNumCols();
+
+        Matrix concatinatedMatrix = new SimpleMatrix(totalRows, mat2.getNumCols());
+
+        for (int i = 0; i < mat1.getNumRows(); i++) {
+            for (int j = 0; j < cols; j++) {
+                double val = mat1.get(i + 1, j + 1);
+                concatinatedMatrix.set(i + 1, j + 1, val);
+            }
+        }
+
+        for (int i = 0; i < mat2.getNumRows(); i++) {
+            for (int j = 0; j < cols; j++) {
+                double val = mat2.get(i + 1, j + 1);
+
+                concatinatedMatrix.set(mat1.getNumRows() + i + 1, j + 1, val);
+            }
+        }
+
+        return concatinatedMatrix;
     }
 
     // Task 1.6
