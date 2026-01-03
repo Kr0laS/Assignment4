@@ -40,7 +40,7 @@ public class FlatMatrix implements Matrix {
         int index = 0;
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols ;j++) {
-                this.mat[index] = mat.get(i + 1, j + 1);
+                this.mat[index] = mat.get(i, j);
                 index = index + 1;
             }
         }
@@ -61,8 +61,9 @@ public class FlatMatrix implements Matrix {
         this.rows = mat.length;
         this.cols = mat[0].length;
 
-        for (int i = 0; i < rows - 1; i++)
-            if(mat[i] != mat[i + 1]) throw new IllegalArgumentException("Matrix must be rectangular");
+        for (int i = 0; i < rows; i++)
+            if (mat[i].length != cols)
+                throw new IllegalArgumentException("Matrix must be rectangular");
 
         this.mat = new double[rows*cols];
 
@@ -81,10 +82,10 @@ public class FlatMatrix implements Matrix {
     public double get(int i, int j) {
         double ans = 0;
         // ---------------write your code BELOW this line only! ------------------
-        if(i < 1 || j < 1 || j > cols || i > rows)
-            throw new IllegalArgumentException("i/j must be more then 0 and less then rows/cols number.");
-
-        ans = mat[cols * (i - 1) + (j - 1)];
+        if (i < 0 || i >= rows || j < 0 || j >= cols) { // Fix: 0-based checks
+            throw new IllegalArgumentException("Invalid indices");
+        }
+        ans = mat[cols * i + j]; // Fix: No -1 offset
         // ---------------write your code ABOVE this line only! ------------------
         return ans;
     }
@@ -94,11 +95,10 @@ public class FlatMatrix implements Matrix {
     // Changes the value of the ('i', 'j') cell to 'value'
     public void set(int i, int j, double value) {
         // ---------------write your code BELOW this line only! ------------------
-        if(i < 1 || j < 1 || j > cols || i > rows)
-            throw new IllegalArgumentException("i/j must be more then 0 and less then rows/cols number.");
-
-        this.mat[cols * (i - 1) + (j - 1)] = value;
-
+        if (i < 0 || i >= rows || j < 0 || j >= cols) {
+            throw new IllegalArgumentException("Invalid indices");
+        }
+        this.mat[cols * i + j] = value;
         // ---------------write your code ABOVE this line only! ------------------
     }
 
@@ -149,12 +149,10 @@ public class FlatMatrix implements Matrix {
     public Matrix transpose() {
         Matrix ans = null;
         // ---------------write your code BELOW this line only! ------------------
+        ans = new FlatMatrix(cols, rows); // note swapped rows/cols
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                double aij = this.get(i + 1, j + 1);
-                double aji = this.get(j + 1, i + 1);
-                this.set(j+1,i+1,aij);
-                this.set(i+1,j+1,aji);
+                ans.set(j, i, this.get(i, j)); // swap indices
             }
         }
         // ---------------write your code ABOVE this line only! ------------------
@@ -168,11 +166,11 @@ public class FlatMatrix implements Matrix {
         if(other instanceof Matrix otherMat)
         {
             ans = true;
-            if(otherMat.getNumRows() != this.rows && otherMat.getNumCols() != this.cols) {
+            if(otherMat.getNumRows() != this.rows || otherMat.getNumCols() != this.cols) {
                 ans = false;
             } else {
-                for (int i = 0; i < rows; i++) {
-                    for (int j = 0; j < cols; j++) {
+                for (int i = 0; i < rows && ans; i++) {
+                    for (int j = 0; j < cols && ans; j++) {
                         if(this.get(i + 1, j  + 1) != otherMat.get(i + 1, j + 1))
                             ans = false;
                     }

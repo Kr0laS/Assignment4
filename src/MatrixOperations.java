@@ -19,7 +19,7 @@ public class MatrixOperations {
         if(from < 0 || from >= to || to > rows)
             throw new IllegalArgumentException("from and to matrix out of bounds");
 
-        SimpleMatrix newMat = new SimpleMatrix(to - from, cols);
+        FlatMatrix newMat = new FlatMatrix(to - from, cols);
         for(int i = from; i <= to; i++)
         {
             for(int j = 0; j < rows; j++)
@@ -127,7 +127,7 @@ public class MatrixOperations {
 
     public static Matrix CreateOMatrix(int n)
     {
-        Matrix oMatrix = new SimpleMatrix(n, n);
+        Matrix oMatrix = new FlatMatrix(n, n);
 
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
@@ -145,7 +145,7 @@ public class MatrixOperations {
         if (mat1 == null || mat2 == null || mat1.getNumCols() != mat2.getNumRows())
             throw new IllegalArgumentException();
 
-        ans = new SimpleMatrix(mat1.getNumRows(), mat2.getNumCols());
+        ans = new FlatMatrix(mat1.getNumRows(), mat2.getNumCols());
 
         for (int i = 0; i < mat1.getNumRows(); i++) {
             for (int j = 0; j < mat2.getNumCols(); j++) {
@@ -172,7 +172,7 @@ public class MatrixOperations {
         int cols = m.getNumCols();
         if(rows != cols) throw new IllegalArgumentException("Matrix must be square.");
 
-        ans = new SimpleMatrix(rows, cols);
+        ans = new FlatMatrix(rows, cols);
         for(int i = 0; i < rows; i++) {
             ans.set(i + 1,i + 1, m.get(i + 1,i + 1));
         }
@@ -189,7 +189,7 @@ public class MatrixOperations {
         int rows = m1.getNumRows();
         int cols = m1.getNumCols();
 
-        ans = new SimpleMatrix(rows, cols);
+        ans = new FlatMatrix(rows, cols);
 
         for(int i = 0; i < rows ; i++) {
             for(int j = 0; j < cols; j++) {
@@ -215,7 +215,7 @@ public class MatrixOperations {
 
         if(rows != m2.getNumCols() || cols != m2.getNumCols())
             throw new IllegalArgumentException("Matrices must have same rows and columns.");
-        ans = new SimpleMatrix(rows, cols);
+        ans = new FlatMatrix(rows, cols);
 
         for(int i = 0; i < rows ; i++) {
             for(int j = 0; j < cols; j++) {
@@ -342,7 +342,7 @@ public class MatrixOperations {
         int totalRows = mat1.getNumRows() + mat2.getNumRows();
         int cols = mat1.getNumCols();
 
-        Matrix concatinatedMatrix = new SimpleMatrix(totalRows, mat2.getNumCols());
+        Matrix concatinatedMatrix = new FlatMatrix(totalRows, mat2.getNumCols());
 
         for (int i = 0; i < mat1.getNumRows(); i++) {
             for (int j = 0; j < cols; j++) {
@@ -380,6 +380,4 @@ public class MatrixOperations {
         // ---------------write your code ABOVE this line only! ------------------
         return ans;
     }
-
-
 }
